@@ -107,4 +107,21 @@ class GaijiNormalizerTest extends PHPUnit_Framework_TestCase {
         $normalizer->addConversionRule('fbfc', 'ffff');
         $normalized = $normalizer->convert('');
     }
+
+    /**
+     * Test an support of ISO-2022-JP-MS.
+     *
+     * @return void
+     */
+    public function testConvertWithSupportOfIso2022JpMs() {
+        $normalizer = new GaijiNormalizer;
+        $normalizer->addConversionRule('eee0', '8d82'); // ハシゴダカ - NEC 選定 IBM 拡張文字
+        $normalizer->addConversionRule('fab1', '8de8'); // タチザキ - NEC 選定 IBM 拡張文字
+
+        $text = 'test of '.pack('H*', 'eee0').pack('H*', 'fab1');
+
+        $result   = $normalizer->convert($text);
+        $expected = mb_convert_encoding('test of 高崎', 'SJIS', 'UTF-8');
+        $this->assertEquals($expected, $result);
+    }
 }

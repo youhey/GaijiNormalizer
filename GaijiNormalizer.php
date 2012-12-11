@@ -21,6 +21,9 @@ class GaijiNormalizer {
     /** Character Encoding */
     const ENCODING = 'SJIS-win';
 
+    /* Regular expression of ISO-2022-JP-MS */
+    const ISO_2022_JP_MS = '/^e[ed][4-9a-f][0-9a-f]$/i';
+
     /**
      * Conversion rules
      *
@@ -93,11 +96,60 @@ class GaijiNormalizer {
         }
 
         $mbCharacter = pack('H*', $code);
-        if (!mb_check_encoding($mbCharacter, self::ENCODING)) {
+        if (!$this->isIso2022JpMs($code) && !$this->isValidSjis($mbCharacter)) {
             $message = "Invalid character of Shift_JIS encoding: {$code}";
             throw new GaijiNormalizerException($message);
         }
 
         return $mbCharacter;
+    }
+
+    /**
+     * Check whether the character code of valid Shift_JIS
+     *
+     * @param String $characters The multibyte character string.
+     * @return boolean Returns TRUE if the character code of valid Shift_JIS.
+     */
+    private function isValidSjis($characters) {
+        $isValidSjis = mb_check_encoding($characters, self::ENCODING);
+
+        return $isValidSjis;
+    }
+
+    /**
+     * Check whether the character code of ISO-2022-JP-MS
+     *
+     * ED40 - ED4F
+     * ED50 - ED5F
+     * ED60 - ED6F
+     * ED70 - ED7F
+     * ED80 - ED8F
+     * ED90 - ED9F
+     * EDA0 - EDAF
+     * EDB0 - EDBF
+     * EDC0 - EDCF
+     * EDD0 - EDDF
+     * EDE0 - EDEF
+     * EDF0 - EDFF
+     * EE40 - EE4F
+     * EE50 - EE5F
+     * EE60 - EE6F
+     * EE70 - EE7F
+     * EE80 - EE8F
+     * EE90 - EE9F
+     * EEA0 - EEAF
+     * EEB0 - EEBF
+     * EEC0 - EECF
+     * EED0 - EEDF
+     * EEE0 - EEEF
+     * EEF0 - EEFF
+     *
+     * @param String $code Code of four-digit hexadecimal characters
+     * @return boolean Returns TRUE if the character code of ISO-2022-JP-MS.
+     */
+    private function isIso2022JpMs($code) {
+        $isIso2022JpMs = (bool)preg_match(self::ISO_2022_JP_MS, $code);
+
+        return $isIso2022JpMs;
     }
 }
